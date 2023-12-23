@@ -24,7 +24,6 @@ const Customer = Record({
     name: text,
     contact: text,
     balance: float64,
-    transactions: Vec(Transaction),
 });
 
 const laundryStorage: typeof Laundry = {
@@ -59,11 +58,11 @@ export default Canister({
           return Result.Err('Transaction not found');
         }
         if(transaction.status!=0) {
-          return Result.Err(`Transaction ${transaction.id} is ${transactionService[transaction.status]}.`)
+          return Result.Err(`Transaction ${transaction.id} is ${transactionStatus[transaction.status]}.`)
         }
         transaction.status = 1; // change status to ongoing
         transactionStorage.insert(transaction.id, transaction);
-        return Result.Ok(`Transaction ${transaction.id} is ${transactionService[transaction.status]}.`)
+        return Result.Ok(`Transaction ${transaction.id} is ${transactionStatus[transaction.status]}.`)
       }
     ),
 
@@ -76,19 +75,27 @@ export default Canister({
           return Result.Err('Transaction not found');
         }
         if(transaction.status!=1) {
-          return Result.Err(`Transaction ${transaction.id} is ${transactionService[transaction.status]}.`)
+          return Result.Err(`Transaction ${transaction.id} is ${transactionStatus[transaction.status]}.`)
         }
         transaction.status = 2; // change status to ready
         transactionStorage.insert(transaction.id, transaction);
-        return Result.Ok(`Transaction ${transaction.id} is ${transactionService[transaction.status]}.`)
+        return Result.Ok(`Transaction ${transaction.id} is ${transactionStatus[transaction.status]}.`)
       }
     ),
+
+    getLaundryBalance: query([], Result(float64, text), () => {
+      try {
+        return Result.Ok(laundryStorage.balance);
+      } catch (error) {
+        return Result.Err('Failed to get balance');
+      }
+    }),
     
     // Transaction
     // Function to get all transactions
     getAllTransaction: query([], Result(Vec(Transaction), text), () => {
       try {
-        return Result.Ok(transactionStorage.values); 
+        return Result.Ok(transactionStorage.values()); 
       } catch (error) {
         return Result.Err('Failed to get transactions');
       }
@@ -140,7 +147,6 @@ export default Canister({
             serviceType: serviceType,
             weight: weight
         };
-        customer.transaction.push(newTransaction);
         customerStorage.insert(customer.id, customer);
         transactionStorage.insert(id, newTransaction);
         return Result.Ok(`Transaction added successfully!`);
@@ -159,7 +165,11 @@ export default Canister({
         }
         if (transaction.customerID != queryCustomer.id)
         {
-            return Result.Err('');
+            return Result.Err('This transaction is not yours!');
+        }
+        if (transaction.status != 0)
+        {
+            return Result.Err('This transaction cannot be updated!');
         }
         // count price
         let price: float64 = 0;
@@ -180,14 +190,10 @@ export default Canister({
         // update transaction info
         transaction.weight = weight;
         transaction.price = price;
+        
         // update customer info
         queryCustomer.balance -= price;
-        // delete previous transaction from transaction vector
-        const transactionVector = queryCustomer.transactions.filter((trans: typeof Transaction) => trans.id != transaction.id);
-        // push new transaction to transaction vector
-        transactionVector.push(transaction);
-        queryCustomer.transactions = transactionVector;
-        
+
         customerStorage.insert(queryCustomer.id, queryCustomer)
         transactionStorage.insert(id, transaction);
         return Result.Ok('Transaction added successfully!');
@@ -201,7 +207,7 @@ export default Canister({
         }
         if (transaction.status != 2)
         {
-            return Result.Err(`Transaction ${transaction.id} is ${transactionService[transaction.status]}.`);
+            return Result.Err(`Transaction ${transaction.id} is ${transactionStatus[transaction.status]}.`);
         }
         transaction.status = 3;
         laundryStorage.balance += transaction.price;
@@ -217,10 +223,14 @@ export default Canister({
         }
         if (transaction.status != 0)
         {
-            return Result.Err(`Transaction ${transaction.id} is ${transactionService[transaction.status]}.`);
+            return Result.Err(`Transaction ${transaction.id} is ${transactionStatus[transaction.status]}.`);
         }
         transaction.status = 4;
         transactionStorage.insert(transaction.id, transaction);
+        
+        const customer = customerStorage.values().find((c: typeof Customer) => c.id === transaction.customerID);
+        customer.balance += transaction.price;
+        customerStorage.insert(customer.id, customer);
         return Result.Ok(`Transaction ${transaction.id} cancelled!`);
     }),
 
@@ -239,13 +249,24 @@ export default Canister({
           name,
           contact,
           balance: 0,
-          transactions: [],
         };
         customerStorage.insert(id, newCustomer);
         return Result.Ok(`Customer ${newCustomer.name} added successfully.`);
       }
     ),
-
+    
+    getCustomerBalance: query([text], Result(float64, text), (name) => {
+        try {
+            const customer = customerStorage.values().find((c: typeof Customer) => c.name === name);
+            if (!customer)
+                return Result.Err(`Customer with name ${name} does not exist!`);
+            return Result.Ok(customer.balance);
+        }
+        catch(error){
+            return Result.Err('Failed to get customer balance')
+        }
+    }),
+    
     updateBalance: update(
       [text, float64],
       Result(text, text),
@@ -260,7 +281,6 @@ export default Canister({
       }
     )
 });
-  
   // a workaround to make uuid package work with Azle
   globalThis.crypto = {
     // @ts-ignore
