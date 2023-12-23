@@ -1,14 +1,44 @@
+type Transaction = record {
+    id: text;
+    date: nat64;
+    status: int8;
+    customerID: text;
+    price: float64;
+    transactionType: bool;
+    serviceType: int8;
+    weight: float32;
+};
+
+type Laundry = record {
+    name: text;
+    location: text;
+    balance: float64;
+};
+
+type Customer = record {
+    id: text;
+    name: text;
+    contact: text;
+    balance: float64;
+    transactions: vec Transaction;
+};
+
+type _AzleResult = variant { Ok : text; Err : text };
+type _AzleResult_1 = variant { Ok : vec Transaction; Err : text };
+type _AzleResult_2 = variant { Ok : Transaction; Err : text };
+type _AzleResult_3 = variant { Ok : float64; Err : text };
+
 service: () -> {
-    cancelTransaction: (text) -> (variant {Ok:text; Err:text});
-    carryOnTheTransaction: (text) -> (variant {Ok:text; Err:text});
-    createCustomer: (text, text) -> (variant {Ok:text; Err:text});
-    createTransaction: (text, float32, bool, int8) -> (variant {Ok:text; Err:text});
-    finishTransaction: (text) -> (variant {Ok:text; Err:text});
-    finishWorkingTheTransaction: (text) -> (variant {Ok:text; Err:text});
-    getAllTransaction: () -> (variant {Ok:vec record {id:text; weight:float32; status:int8; serviceType:int8; transactionType:bool; date:nat64; customerID:text; price:float64}; Err:text}) query;
-    getCustomerBalance: (text) -> (variant {Ok:float64; Err:text}) query;
-    getLaundryBalance: () -> (variant {Ok:float64; Err:text}) query;
-    getTransactionByID: (text) -> (variant {Ok:record {id:text; weight:float32; status:int8; serviceType:int8; transactionType:bool; date:nat64; customerID:text; price:float64}; Err:text}) query;
-    updateBalance: (text, float64) -> (variant {Ok:text; Err:text});
-    updateTransaction: (text, float32, bool, int8, text) -> (variant {Ok:text; Err:text});
+    carryOnTheTransaction: (text) -> (_AzleResult);
+    finishWorkingTheTransaction: (text) -> (_AzleResult);
+    getAllTransaction: () -> (_AzleResult_1) query;
+    getTransactionByID: (text) -> (_AzleResult_2) query;
+    createTransaction: (text, float32, bool, int8) -> (_AzleResult);
+    updateTransaction: (text, float32, bool, int8, text) -> (_AzleResult);
+    finishTransaction: (text) -> (_AzleResult);
+    cancelTransaction: (text) -> (_AzleResult);
+    createCustomer: (text, text) -> (_AzleResult);
+    updateBalance: (text, float64) -> (_AzleResult);
+    getLaundryBalance: () -> (_AzleResult_3) query;
+    getCustomerBalance: (text) -> (_AzleResult_3) query;
 }

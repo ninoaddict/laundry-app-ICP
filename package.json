@@ -5,9 +5,7 @@
         "replica_stop": "dfx stop",
         "canister_deploy_local": "dfx deploy laundry-app-ICP",
         "canister_deploy_mainnet": "dfx deploy --network ic laundry-app-ICP",
-        "canister_uninstall": "dfx canister uninstall-code laundry-app-ICP",
-        "canister_call_get_message": "dfx canister call laundry-app-ICP getMessage",
-        "canister_call_set_message": "dfx canister call laundry-app-ICP setMessage '(\"Hello world!\")'"
+        "canister_uninstall": "dfx canister uninstall-code laundry-app-ICP"
     },
     "dependencies": {
         "@dfinity/agent": "^0.19.2",
