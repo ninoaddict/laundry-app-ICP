@@ -1,0 +1,22 @@
+{
+    "scripts": {
+        "dfx_install": "DFX_VERSION=0.15.1 sh -ci \"$(curl -fsSL https://sdk.dfinity.org/install.sh)\"",
+        "replica_start": "dfx start --background",
+        "replica_stop": "dfx stop",
+        "canister_deploy_local": "dfx deploy laundry-app-ICP",
+        "canister_deploy_mainnet": "dfx deploy --network ic laundry-app-ICP",
+        "canister_uninstall": "dfx canister uninstall-code laundry-app-ICP",
+        "canister_call_get_message": "dfx canister call laundry-app-ICP getMessage",
+        "canister_call_set_message": "dfx canister call laundry-app-ICP setMessage '(\"Hello world!\")'"
+    },
+    "dependencies": {
+        "@dfinity/agent": "^0.19.2",
+        "@dfinity/candid": "^0.19.2",
+        "azle": "^0.18.6",
+        "uuid": "^9.0.0"
+    },
+    "devDependencies": {
+        "@types/uuid": "^9.0.1"
+    }
+}
+
