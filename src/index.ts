@@ -1,5 +1,5 @@
 import { ProxyMessageKind } from '@dfinity/agent';
-import { Canister, query, update, Result, text, nat64, float64, ic, StableBTreeMap, Vec, Record, int8 } from 'azle';
+import { Canister, query, text, update, Void, Vec, Record, StableBTreeMap, Result, nat64, float64, ic, Opt, Principal, AzleResult, Ok, Err, int8, bool} from 'azle';
 import { v4 as uuidv4 } from 'uuid';
 
 // Enums for transaction status and service type
